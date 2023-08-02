@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"plsc/golang/lib"
 	"plsc/golang/types"
 
 	"github.com/gorilla/mux"
@@ -21,68 +22,79 @@ func NewProductHandler(bdConn gorm.DB) *ProductHandler {
 }
 
 // getProducts is the HTTP handler for GET /products.
-func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
+func (p *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	var products []types.Product
-	result := h.tx.Preload("Category").Find(&products)
+	result := p.tx.Preload("Category").Find(&products)
 	if result.Error != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "    ")
-	enc.Encode(products)
+	lib.EncodeOkReponse(w, products)
 }
 
 // getProduct is the HTTP handler for GET /products/{id}.
-func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
+func (p *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	var product types.Product
-	result := h.tx.First(&product, mux.Vars(r)["id"])
+
+	result := p.tx.First(&product, mux.Vars(r)["id"])
 	if result.Error != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	json.NewEncoder(w).Encode(product)
+	lib.EncodeOkReponse(w, product)
 }
 
 // getCategories is the HTTP handler for GET /categories.
-func (h *ProductHandler) GetCategories(w http.ResponseWriter, r *http.Request) {
+func (p *ProductHandler) GetCategories(w http.ResponseWriter, r *http.Request) {
 	var categories []types.Category
-	result := h.tx.Find(&categories)
+	result := p.tx.Find(&categories)
 	if result.Error != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "    ")
-	enc.Encode(categories)
+	lib.EncodeOkReponse(w, categories)
 }
 
 // getCategory is the HTTP handler for GET /category/{id}.
-func (h *ProductHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
+func (p *ProductHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
 	var category types.Category
-	result := h.tx.First(&category, mux.Vars(r)["id"])
+	result := p.tx.First(&category, mux.Vars(r)["id"])
 	if result.Error != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	json.NewEncoder(w).Encode(category)
+	lib.EncodeOkReponse(w, category)
 }
 
 // getRawQuery is the HTTP handler for GET /query.
-func (h *ProductHandler) GetRawQuery(w http.ResponseWriter, r *http.Request) {
+func (p *ProductHandler) GetRawQuery(w http.ResponseWriter, r *http.Request) {
 	var products []types.Product
-	result := h.tx.Raw("SELECT * FROM products").Scan(&products)
+	result := p.tx.Raw("SELECT * FROM products").Scan(&products)
 	if result.Error != nil {
 		http.NotFound(w, r)
 		fmt.Println(result.Error)
 		return
 	}
 
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "    ")
-	enc.Encode(result)
+	lib.EncodeOkReponse(w, products)
+}
+
+// AddProduct is the HTTP handler for POST /add/products.
+func (p *ProductHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
+	var newProduct types.Product
+
+	json.NewDecoder(r.Body).Decode(&newProduct)
+
+	product := p.tx.Create(&newProduct)
+	if product.Error != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	lib.EncodeOkReponse(w, newProduct)
+
 }

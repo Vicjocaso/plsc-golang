@@ -92,6 +92,7 @@ func NewHandler(db *gorm.DB) http.Handler {
 	router.HandleFunc("/health", HealthCheckHandler)
 	productHandler := handlers.NewProductHandler(*db)
 	router.HandleFunc("/products", productHandler.GetProducts).Methods(http.MethodGet)
+	router.HandleFunc("/add/product", productHandler.AddProduct).Methods(http.MethodPost)
 	router.HandleFunc("/products/{id}", productHandler.GetProduct).Methods(http.MethodGet)
 	router.HandleFunc("/categories", productHandler.GetCategories).Methods(http.MethodGet)
 	router.HandleFunc("/categories/{id}", productHandler.GetCategory).Methods(http.MethodGet)

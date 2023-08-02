@@ -1,7 +1,5 @@
 package types
 
-import "time"
-
 // A Product contains metadata about a product for sale.
 type Product struct {
 	// gorm.Model
@@ -14,8 +12,6 @@ type Product struct {
 	Tags        string
 	CategoryID  int
 	Category    Category `gorm:"foreignKey:CategoryID"`
-	CreateAt    time.Time
-	updateAt    time.Time
 }
 
 // A Category describes a group of Products.
